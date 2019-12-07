@@ -13,19 +13,47 @@ const (
 	quackCity = CityName("quack")
 )
 
-// Check if we can get the list of known cities from a map.
-func TestKnownCities(t *testing.T) {
-	var err error
-
+func testMap() (*Map, error) {
 	m := NewMap()
 	c1 := NewCity()
-	err = c1.AddRoad(North, chaCity)
-	require.NoError(t, err)
-	err = c1.AddRoad(South, blahCity)
-	require.NoError(t, err)
+	if err := c1.AddRoad(North, chaCity); err != nil {
+		return nil, err
+	}
+	if err := c1.AddRoad(South, blahCity); err != nil {
+		return nil, err
+	}
+	if err := m.AddCity(quackCity, *c1); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
 
-	err = m.AddCity(quackCity, *c1)
+// Check if we can get the list of known cities from a map.
+func TestKnownCities(t *testing.T) {
+	m, err := testMap()
 	require.NoError(t, err)
 
 	assert.ElementsMatch(t, m.KnownCities(), []CityName{chaCity, blahCity, quackCity})
+}
+
+// Check destroying a given city.
+func TestDestroyCity(t *testing.T) {
+	m, err := testMap()
+	require.NoError(t, err)
+
+	// Check initial status of blahCity.
+	assert.False(t, m.IsCityDestroyed(blahCity))
+
+	// Try destroying a nonexistant city.
+	err = m.DestroyCity(CityName("NotHere"))
+	assert.Error(t, err)
+
+	// Destroy blah.
+	err = m.DestroyCity(blahCity)
+	assert.NoError(t, err)
+	assert.True(t, m.IsCityDestroyed(blahCity))
+
+	// Destroy blah again.
+	err = m.DestroyCity(blahCity)
+	assert.Error(t, err)
 }

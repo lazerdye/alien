@@ -44,12 +44,13 @@ func CityNameFromString(s string) CityName {
 
 // Internal representation of the map.
 type Map struct {
-	cities map[CityName]City
+	destroyed map[CityName]bool
+	cities    map[CityName]City
 }
 
 // Create a new, empty map.
 func NewMap() *Map {
-	return &Map{make(map[CityName]City)}
+	return &Map{make(map[CityName]bool), make(map[CityName]City)}
 }
 
 // A single city within the map.
@@ -81,6 +82,12 @@ func (m *Map) AddCity(cityName CityName, city City) error {
 		return errors.Errorf("Duplicate city name: %s", cityName)
 	}
 	m.cities[cityName] = city
+	m.destroyed[cityName] = false
+	for _, destCity := range city.roads {
+		if _, ok := m.destroyed[destCity]; !ok {
+			m.destroyed[destCity] = false
+		}
+	}
 	return nil
 }
 
@@ -100,12 +107,57 @@ func (m *Map) KnownCities() []CityName {
 
 func (m *Map) PrettyPrint(w io.Writer) {
 	for cityName, c := range m.cities {
+		if m.IsCityDestroyed(cityName) {
+			// City is destroyed, skip it.
+			continue
+		}
 		roads := make([]string, len(c.roads))
 		i := 0
 		for dir, destCity := range c.roads {
+			if m.IsCityDestroyed(destCity) {
+				// Destination city is destroyed, skip it.
+				continue
+			}
 			roads[i] = fmt.Sprintf("%s=%s", dir, destCity)
 			i++
 		}
 		fmt.Fprintf(w, "%s %s\n", cityName, strings.Join(roads, " "))
 	}
+}
+
+// Is this city destroyed? Will return false for unknown cities.
+func (m *Map) IsCityDestroyed(cityName CityName) bool {
+	d, ok := m.destroyed[cityName]
+	if !ok {
+		return false
+	}
+	return d
+}
+
+// Destroy the given city.
+func (m *Map) DestroyCity(cityName CityName) error {
+	destroyed, ok := m.destroyed[cityName]
+	if !ok {
+		return errors.Errorf("City not known: %s", cityName)
+	}
+	if destroyed {
+		return errors.Errorf("City already destroyed: %s", cityName)
+	}
+	m.destroyed[cityName] = true
+	return nil
+}
+
+// Find availabile directions out of a given city.
+func (m *Map) AvailableDirections(cityName CityName) []CityName {
+	var cities []CityName
+	city, ok := m.cities[cityName]
+	if !ok {
+		return cities
+	}
+	for _, destName := range city.roads {
+		if !m.IsCityDestroyed(destName) {
+			cities = append(cities, destName)
+		}
+	}
+	return cities
 }
