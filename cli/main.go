@@ -66,6 +66,10 @@ func runSingleLoop(t int, m *config.Map, aliens []alien.Alien) error {
 		}
 	}
 	// Generate a map city->[]aliens
+    reverseMap := make(map[CityName][]*config.Alien)
+    for _, a := range aliens {
+        reverseMap[a.City()] = a
+    }
 	// Find each city with more than one alien
 	// Destroy said city, and aliens
 	// Move the remaining aliens

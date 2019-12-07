@@ -26,3 +26,7 @@ func (a *Alien) InitInRandomLocation(id int, m *config.Map, randInt RandomInt) {
 func (a *Alien) PrettyPrint(w io.Writer) {
 	fmt.Fprintf(w, "%d %s\n", a.id, a.city)
 }
+
+func (a *Alien) City() CityName {
+    return a.city
+}
