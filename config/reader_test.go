@@ -34,9 +34,9 @@ func TestInvalidReader(t *testing.T) {
 	var err error
 
 	input1 := `
-# This one is bad, as it has no = sign.
+# This one is bad, as a city name has a space, making the format invalid.
 
-Quack north=blah what
+Quack north=blah source=another one
 `
 	_, err = parser.Parse(strings.NewReader(input1))
 	require.Error(t, err)
