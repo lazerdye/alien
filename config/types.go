@@ -1,6 +1,10 @@
 package config
 
 import (
+	"fmt"
+	"io"
+	"strings"
+
 	"github.com/pkg/errors"
 )
 
@@ -56,17 +60,17 @@ type City struct {
 
 // Create a new city, with no roads.
 func NewCity() *City {
-    return &City{make(map[Direction]CityName)}
+	return &City{make(map[Direction]CityName)}
 }
 
 func (c *City) AddRoad(direction Direction, name CityName) error {
-    _, ok := c.roads[direction]
-    if ok {
-        // Road direction already defined.
-        return errors.Errorf("City already has a road in direction %s", direction)
-    }
-    c.roads[direction] = name
-    return nil
+	_, ok := c.roads[direction]
+	if ok {
+		// Road direction already defined.
+		return errors.Errorf("City already has a road in direction %s", direction)
+	}
+	c.roads[direction] = name
+	return nil
 }
 
 // Add a city to a map, will return an error if the city already exists.
@@ -82,15 +86,26 @@ func (m *Map) AddCity(cityName CityName, city City) error {
 
 // Get a list of known cities, cities will be returned in unknown order.
 func (m *Map) KnownCities() []CityName {
-    var ret []CityName
+	var ret []CityName
 
-    for n, c := range m.cities {
-        ret = append(ret, n)
-        for _, n := range c.roads {
-            ret = append(ret, n)
-        }
-    }
+	for n, c := range m.cities {
+		ret = append(ret, n)
+		for _, n := range c.roads {
+			ret = append(ret, n)
+		}
+	}
 
-    return ret
+	return ret
 }
 
+func (m *Map) PrettyPrint(w io.Writer) {
+	for cityName, c := range m.cities {
+		roads := make([]string, len(c.roads))
+		i := 0
+		for dir, destCity := range c.roads {
+			roads[i] = fmt.Sprintf("%s=%s", dir, destCity)
+			i++
+		}
+		fmt.Fprintf(w, "%s %s\n", cityName, strings.Join(roads, " "))
+	}
+}
