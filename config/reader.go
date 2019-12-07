@@ -2,7 +2,6 @@ package config
 
 import (
 	"bufio"
-	"fmt"
 	"github.com/pkg/errors"
 	"io"
 	"strings"
@@ -21,7 +20,6 @@ func (p *Parser) parseLine(line string) (CityName, *City, error) {
 	if len(trimmed) == 0 {
 		return NilCityName, nil, nil
 	}
-	fmt.Printf("%s\n", trimmed)
 	mapEntryParts := strings.Split(trimmed, " ")
 	thisCityName := CityNameFromString(mapEntryParts[0])
 	if thisCityName == NilCityName {
@@ -31,7 +29,6 @@ func (p *Parser) parseLine(line string) (CityName, *City, error) {
 	roads := make(map[Direction]CityName, len(mapEntryParts)-1)
 	for i := 1; i < len(mapEntryParts); i++ {
 		directionAndCity := strings.SplitN(mapEntryParts[i], "=", 2)
-		fmt.Printf("Dir: %v\n", directionAndCity)
 		direction := DirectionFromString(directionAndCity[0])
 		if direction == NilDirection {
 			return NilCityName, nil, errors.Errorf("Invalid Direction: %s", directionAndCity[0])
