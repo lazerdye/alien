@@ -19,14 +19,14 @@ Foo north=Bar west=Baz south=Qu-ux
 	m, err := parser.Parse(strings.NewReader(input1))
 	require.NoError(t, err)
 
-	assert.Equal(t, 1, len(m.Cities))
-	city, ok := m.Cities[CityName("Foo")]
+	assert.Equal(t, 1, len(m.cities))
+	city, ok := m.cities[CityName("Foo")]
 	require.True(t, ok)
 	assert.Equal(t, map[Direction]CityName{
 		North: CityName("Bar"),
 		West:  CityName("Baz"),
 		South: CityName("Qu-ux"),
-	}, city.Roads)
+	}, city.roads)
 }
 
 func TestInvalidReader(t *testing.T) {

@@ -40,13 +40,7 @@ func CityNameFromString(s string) CityName {
 
 // Internal representation of the map.
 type Map struct {
-	Cities map[CityName]City
-}
-
-// A single city within the map.
-type City struct {
-	// Roads out of the city.
-	Roads map[Direction]CityName
+	cities map[CityName]City
 }
 
 // Create a new, empty map.
@@ -54,13 +48,49 @@ func NewMap() *Map {
 	return &Map{make(map[CityName]City)}
 }
 
+// A single city within the map.
+type City struct {
+	// Roads out of the city.
+	roads map[Direction]CityName
+}
+
+// Create a new city, with no roads.
+func NewCity() *City {
+    return &City{make(map[Direction]CityName)}
+}
+
+func (c *City) AddRoad(direction Direction, name CityName) error {
+    _, ok := c.roads[direction]
+    if ok {
+        // Road direction already defined.
+        return errors.Errorf("City already has a road in direction %s", direction)
+    }
+    c.roads[direction] = name
+    return nil
+}
+
 // Add a city to a map, will return an error if the city already exists.
 func (m *Map) AddCity(cityName CityName, city City) error {
-	_, ok := m.Cities[cityName]
+	_, ok := m.cities[cityName]
 	if ok {
 		// City already exists, cannot have the same name.
 		return errors.Errorf("Duplicate city name: %s", cityName)
 	}
-	m.Cities[cityName] = city
+	m.cities[cityName] = city
 	return nil
 }
+
+// Get a list of known cities, cities will be returned in unknown order.
+func (m *Map) KnownCities() []CityName {
+    var ret []CityName
+
+    for n, c := range m.cities {
+        ret = append(ret, n)
+        for _, n := range c.roads {
+            ret = append(ret, n)
+        }
+    }
+
+    return ret
+}
+
