@@ -7,13 +7,15 @@ import (
 	"testing"
 )
 
-func TestReader(t *testing.T) {
+func TestSuccessfulReader(t *testing.T) {
+	var parser Parser
+	var err error
+
 	input1 := `
 # We have some comments, and after this blank line.
 
 Foo north=Bar west=Baz south=Qu-ux
 `
-	var parser Parser
 	m, err := parser.Parse(strings.NewReader(input1))
 	require.NoError(t, err)
 
@@ -25,4 +27,26 @@ Foo north=Bar west=Baz south=Qu-ux
 		West:  CityName("Baz"),
 		South: CityName("Qu-ux"),
 	}, city.Roads)
+}
+
+func TestInvalidReader(t *testing.T) {
+	var parser Parser
+	var err error
+
+	input1 := `
+# This one is bad, as it has no = sign.
+
+Quack north=blah what
+`
+	_, err = parser.Parse(strings.NewReader(input1))
+	require.Error(t, err)
+
+	input2 := `
+# This one is bad, as it repeats a city name.
+
+Which north=What south=Where
+Which north=That south=Other
+`
+	_, err = parser.Parse(strings.NewReader(input2))
+	require.Error(t, err)
 }
