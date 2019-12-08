@@ -147,8 +147,8 @@ func (m *Map) DestroyCity(cityName CityName) error {
 	return nil
 }
 
-// Find availabile directions out of a given city.
-func (m *Map) AvailableDirections(cityName CityName) []CityName {
+// Find non-destroyed cities connected to the given city.
+func (m *Map) ConnectedCities(cityName CityName) []CityName {
 	var cities []CityName
 	city, ok := m.cities[cityName]
 	if !ok {

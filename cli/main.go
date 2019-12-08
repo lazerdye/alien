@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
-	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -45,9 +44,9 @@ func loadConfig(mapFile string) (*config.Map, error) {
 func doRun(m *config.Map, numAliens int, maxTime int) error {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	// Generate alien list.
-	aliens := make([]alien.Alien, numAliens)
+	aliens := make([]*alien.Alien, numAliens)
 	for i := 0; i < numAliens; i++ {
-		aliens[i].InitInRandomLocation(i+1, m, r)
+		aliens[i] = alien.NewRandomAlien(i+1, m, r)
 	}
 	for t := 0; t < maxTime; t++ {
 		if err := runSingleLoop(t, m, aliens, r); err != nil {
@@ -59,7 +58,7 @@ func doRun(m *config.Map, numAliens int, maxTime int) error {
 	return nil
 }
 
-func runSingleLoop(t int, m *config.Map, aliens []alien.Alien, r *rand.Rand) error {
+func runSingleLoop(t int, m *config.Map, aliens []*alien.Alien, r *rand.Rand) error {
 	if log.GetLevel() >= log.InfoLevel {
 		fmt.Fprintf(os.Stderr, "=== %d MAP\n", t)
 		m.PrettyPrint(os.Stderr)
@@ -71,10 +70,9 @@ func runSingleLoop(t int, m *config.Map, aliens []alien.Alien, r *rand.Rand) err
 			a.PrettyPrint(os.Stderr)
 		}
 	}
-	// Generate a map city->[]aliens
+	// Generate a map city->[]*alien
 	cityToAlien := make(map[config.CityName][]*alien.Alien)
-	for i := 0; i < len(aliens); i++ {
-		a := &aliens[i]
+	for _, a := range aliens {
 		if a.IsDestroyed() {
 			// Alien is destroyed, skip it.
 			continue
@@ -83,34 +81,19 @@ func runSingleLoop(t int, m *config.Map, aliens []alien.Alien, r *rand.Rand) err
 	}
 	// Find each city with more than one alien
 	// Destroy said city, and aliens
-	for city, aliensInCity := range cityToAlien {
+	for _, aliensInCity := range cityToAlien {
 		if len(aliensInCity) > 1 {
-			log.Infof("City %s has too many aliens: %v", city, aliensInCity)
-			if err := m.DestroyCity(city); err != nil {
+			if err := alien.Fight(m, aliensInCity); err != nil {
 				return err
 			}
-			for _, a := range aliensInCity {
-				if err := a.Destroy(); err != nil {
-					return err
-				}
-			}
-			alienDescription := make([]string, len(aliensInCity))
-			for i, a := range aliensInCity {
-				alienDescription[i] = fmt.Sprintf("alien %d", a.ID())
-			}
-			fmt.Printf("%s has been destroyed by %s!\n", city, strings.Join(alienDescription, " and "))
 		}
 	}
 	// Move the remaining aliens
-	for i := 0; i < len(aliens); i++ {
-		if aliens[i].IsDestroyed() {
+	for _, a := range aliens {
+		if a.IsDestroyed() {
 			continue
 		}
-		directions := m.AvailableDirections(aliens[i].City())
-		if len(directions) > 0 {
-			newDir := directions[r.Intn(len(directions))]
-			aliens[i].MoveTo(newDir)
-		}
+		a.Move(m, r)
 	}
 	return nil
 }

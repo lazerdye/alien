@@ -41,8 +41,30 @@ func (r fakeRandom) Intn(n int) int {
 func TestInitInRandomLocation(t *testing.T) {
 	m, err := testMap()
 	require.NoError(t, err)
-	var alien Alien
-	alien.InitInRandomLocation(5, m, fakeRandom{0})
-	assert.Equal(t, 5, alien.id)
-	assert.Equal(t, quackCity, alien.city)
+	alien1 := NewRandomAlien(1, m, fakeRandom{0})
+	alien2 := NewRandomAlien(2, m, fakeRandom{1})
+	assert.Equal(t, 1, alien1.id)
+	assert.Equal(t, quackCity, alien1.city)
+	assert.Equal(t, 2, alien2.id)
+	assert.Equal(t, chaCity, alien2.city)
+}
+
+func TestFight(t *testing.T) {
+
+	m, err := testMap()
+	require.NoError(t, err)
+
+	alien1 := NewRandomAlien(1, m, fakeRandom{0})
+	alien2 := NewRandomAlien(2, m, fakeRandom{0})
+	alien3 := NewRandomAlien(3, m, fakeRandom{1})
+
+	err = Fight(m, []*Alien{alien1, alien2})
+	require.NoError(t, err)
+
+	assert.True(t, m.IsCityDestroyed(quackCity))
+	assert.False(t, m.IsCityDestroyed(chaCity))
+	assert.True(t, alien1.IsDestroyed())
+	assert.True(t, alien2.IsDestroyed())
+	assert.False(t, alien3.IsDestroyed())
+	assert.Equal(t, chaCity, alien3.City())
 }
