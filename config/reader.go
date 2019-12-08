@@ -44,7 +44,7 @@ func (p *Parser) parseLine(line string) (CityName, *City, error) {
 	return thisCityName, &city, nil
 }
 
-// Parse the given file.
+// Parse the given file as a map config.
 func (p *Parser) Parse(r io.Reader) (*Map, error) {
 	scanner := bufio.NewScanner(r)
 	m := NewMap()

@@ -23,6 +23,7 @@ var (
 	verify       = kingpin.Command("verify", "Verify the config file")
 )
 
+// Load the config from the given filename.
 func loadConfig(mapFile string) (*config.Map, error) {
 	file, err := os.Open(mapFile)
 	if err != nil {
@@ -41,6 +42,7 @@ func loadConfig(mapFile string) (*config.Map, error) {
 	return m, nil
 }
 
+// Run the alien simulator.
 func doRun(m *config.Map, numAliens int, maxTime int) error {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	// Generate alien list.
@@ -58,6 +60,7 @@ func doRun(m *config.Map, numAliens int, maxTime int) error {
 	return nil
 }
 
+// Run a single loop of the alien simulator.
 func runSingleLoop(t int, m *config.Map, aliens []*alien.Alien, r *rand.Rand) error {
 	if log.GetLevel() >= log.InfoLevel {
 		fmt.Fprintf(os.Stderr, "=== %d MAP\n", t)

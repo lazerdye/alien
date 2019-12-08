@@ -8,8 +8,10 @@ import (
 	"github.com/pkg/errors"
 )
 
+// The name of a city.
 type CityName string
 
+// One of the cardinal directions.
 type Direction string
 
 const (
@@ -26,7 +28,7 @@ const (
 	NilCityName CityName = ""
 )
 
-// Create a Direction object from a string.
+// Create a Direction object from a string, NilDirection on error.
 func DirectionFromString(s string) Direction {
 	dir := Direction(s)
 	switch dir {
@@ -36,13 +38,13 @@ func DirectionFromString(s string) Direction {
 	return NilDirection
 }
 
-// Create a City from a string.
+// Create a City from a string, NilCityName on error.
 // Currently, there are no restrictions on city names.
 func CityNameFromString(s string) CityName {
 	return CityName(s)
 }
 
-// Internal representation of the map.
+// Internal representation of a map.
 type Map struct {
 	destroyed map[CityName]bool
 	cities    map[CityName]City
@@ -59,11 +61,12 @@ type City struct {
 	roads map[Direction]CityName
 }
 
-// Create a new city, with no roads.
+// Create a new city, with roads added later.
 func NewCity() *City {
 	return &City{make(map[Direction]CityName)}
 }
 
+// Add a road to the city in the given direction. A direction can have only one road.
 func (c *City) AddRoad(direction Direction, name CityName) error {
 	_, ok := c.roads[direction]
 	if ok {
@@ -91,7 +94,7 @@ func (m *Map) AddCity(cityName CityName, city City) error {
 	return nil
 }
 
-// Get a list of known cities, cities will be returned in unknown order.
+// Get a list of known cities, cities will be returned in unspecified order.
 func (m *Map) KnownCities() []CityName {
 	var ret []CityName
 
@@ -103,26 +106,6 @@ func (m *Map) KnownCities() []CityName {
 	}
 
 	return ret
-}
-
-func (m *Map) PrettyPrint(w io.Writer) {
-	for cityName, c := range m.cities {
-		if m.IsCityDestroyed(cityName) {
-			// City is destroyed, skip it.
-			continue
-		}
-		roads := make([]string, len(c.roads))
-		i := 0
-		for dir, destCity := range c.roads {
-			if m.IsCityDestroyed(destCity) {
-				// Destination city is destroyed, skip it.
-				continue
-			}
-			roads[i] = fmt.Sprintf("%s=%s", dir, destCity)
-			i++
-		}
-		fmt.Fprintf(w, "%s %s\n", cityName, strings.Join(roads, " "))
-	}
 }
 
 // Is this city destroyed? Will return false for unknown cities.
@@ -160,4 +143,25 @@ func (m *Map) ConnectedCities(cityName CityName) []CityName {
 		}
 	}
 	return cities
+}
+
+// Print out this map.
+func (m *Map) PrettyPrint(w io.Writer) {
+	for cityName, c := range m.cities {
+		if m.IsCityDestroyed(cityName) {
+			// City is destroyed, skip it.
+			continue
+		}
+		roads := make([]string, len(c.roads))
+		i := 0
+		for dir, destCity := range c.roads {
+			if m.IsCityDestroyed(destCity) {
+				// Destination city is destroyed, skip it.
+				continue
+			}
+			roads[i] = fmt.Sprintf("%s=%s", dir, destCity)
+			i++
+		}
+		fmt.Fprintf(w, "%s %s\n", cityName, strings.Join(roads, " "))
+	}
 }

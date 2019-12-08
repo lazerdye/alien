@@ -10,16 +10,16 @@ import (
 	"github.com/lazerdye/alien/config"
 )
 
-// Interface to allow easy mocking of generating a random inteter.
-type RandomInt interface {
-	Intn(max int) int
-}
-
-// Store the state of an alien.
+// The state of an alien.
 type Alien struct {
 	id        int
 	destroyed bool
 	city      config.CityName
+}
+
+// Interface to allow easy mocking of generating a random inteter.
+type RandomInt interface {
+	Intn(max int) int
 }
 
 // Initialize the alien in a random location.
@@ -47,7 +47,7 @@ func (a *Alien) PrettyPrint(w io.Writer) {
 	}
 }
 
-// Destroy this alien, this can happen only once.
+// Destroy this alien, this can happen only once per alien.
 func (a *Alien) Destroy() error {
 	if a.destroyed {
 		return errors.Errorf("Alien %d already destroyed", a.id)
@@ -66,7 +66,7 @@ func (a *Alien) City() config.CityName {
 	return a.city
 }
 
-// Move this alien.
+// Move this alien to a random allowed location.
 func (a *Alien) Move(m *config.Map, r RandomInt) {
 	roads := m.ConnectedCities(a.City())
 	if len(roads) > 0 {
