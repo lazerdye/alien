@@ -51,8 +51,13 @@ func doRun(m *config.Map, numAliens int, maxTime int) error {
 		aliens[i] = alien.NewRandomAlien(i+1, m, r)
 	}
 	for t := 0; t < maxTime; t++ {
-		if err := runSingleLoop(t, m, aliens, r); err != nil {
+		moved, err := runSingleLoop(t, m, aliens, r)
+		if err != nil {
 			return err
+		}
+		if !moved {
+			log.Info("Early exit, aliens cannot move anywhere.")
+			break
 		}
 	}
 	fmt.Println("==== Final map")
@@ -61,7 +66,7 @@ func doRun(m *config.Map, numAliens int, maxTime int) error {
 }
 
 // Run a single loop of the alien simulator.
-func runSingleLoop(t int, m *config.Map, aliens []*alien.Alien, r *rand.Rand) error {
+func runSingleLoop(t int, m *config.Map, aliens []*alien.Alien, r *rand.Rand) (bool, error) {
 	if log.GetLevel() >= log.InfoLevel {
 		fmt.Fprintf(os.Stderr, "=== %d MAP\n", t)
 		m.PrettyPrint(os.Stderr)
@@ -87,18 +92,19 @@ func runSingleLoop(t int, m *config.Map, aliens []*alien.Alien, r *rand.Rand) er
 	for _, aliensInCity := range cityToAlien {
 		if len(aliensInCity) > 1 {
 			if err := alien.Fight(m, aliensInCity); err != nil {
-				return err
+				return false, err
 			}
 		}
 	}
 	// Move the remaining aliens
+	anyMoved := false
 	for _, a := range aliens {
 		if a.IsDestroyed() {
 			continue
 		}
-		a.Move(m, r)
+		anyMoved = anyMoved || a.Move(m, r)
 	}
-	return nil
+	return anyMoved, nil
 }
 
 func initLogging(infoLogging bool) {

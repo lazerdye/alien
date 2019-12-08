@@ -66,13 +66,15 @@ func (a *Alien) City() config.CityName {
 	return a.city
 }
 
-// Move this alien to a random allowed location.
-func (a *Alien) Move(m *config.Map, r RandomInt) {
+// Move this alien to a random allowed location. Returns true if the alien moved.
+func (a *Alien) Move(m *config.Map, r RandomInt) bool {
 	roads := m.ConnectedCities(a.City())
-	if len(roads) > 0 {
-		newCity := roads[r.Intn(len(roads))]
-		a.city = newCity
+	if len(roads) == 0 {
+		return false
 	}
+	newCity := roads[r.Intn(len(roads))]
+	a.city = newCity
+	return true
 }
 
 // Perform a fight between a group of aliens.
